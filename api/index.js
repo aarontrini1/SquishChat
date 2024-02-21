@@ -24,7 +24,7 @@ mongoose
   });
 
 app.get("/", (req, res) => {
-    res.status(404).send("Not Found");
+  res.status(404).send("Not Found");
 });
 
 app.listen(port, () => {
@@ -37,39 +37,66 @@ const Message = require("./models/message");
 //endpoint for registeration of user
 
 app.post("/register", (req, res) => {
-    const { name, email, password } = req.body;
-  
-    //create a new user object
-    const newUser = new User({ name, email, password });
-  
-    //save user to the database in MongoDB
-    newUser
-      .save()
-      .then(() => {
-        res.status(200).json({ message: "User registered successfully" });
-      })
-      .catch((err) => {
-        console.log("Error registering user", err);
-        res.status(500).json({ message: "Error registering the user!" });
-      });
-  });
-  
+  const { name, email, password } = req.body;
 
-// app.post("/register", (req, res) => {
-//   const { name, email, password } = req.body;
+  //create a new user object
+  const newUser = new User({ name, email, password });
 
-//   //create a new user object
-//   const newUser = new User({ name, email, password });
+  //save user to the database in MongoDB
+  newUser
+    .save()
+    .then(() => {
+      res.status(200).json({ message: "User registered successfully" });
+    })
+    .catch((err) => {
+      console.log("Error registering user", err);
+      res.status(500).json({ message: "Error registering the user!" });
+    });
+});
 
-//   //save user to database in MongoDB
-//   newUser
-//     .save()
-//     .then(() => {
-//       res.status(200).json({ message: "User registered successfully" });
-//     })
-//     .catch((err) => {
-//       console.log("Error registering user", err);
-//       res.status(500).json({ message: "Error registering the user!" });
-//     });
-// });
+//function to create token based on userID
+const createToken = (userId) => {
+    const payload = {
+        userId: userId,
+    }
 
+    //Generate the token with a secret key and expiration time
+    const token = jwt.sign(payload, "L9%bg!qfPxh%v%Ym$g!mN$a!aERC!9DE", {expiresIn: "6h"});
+
+    return token;
+}
+
+//endpoint for logging in
+app.post("/login", (req, res) => {
+  const { email, password } = req.body;
+
+  //check if th email and password are provided
+  if (!email || !password) {
+    return res
+      .status(404)
+      .json({ message: "Email and Password are both required to login!" });
+  }
+
+  //check for user in backend
+  User.findOne({ email })
+    .then((user) => {
+      if (!user) {
+        //user not found
+        return res.status(404).json({ message: "Invalid Email!" });
+      }
+
+      //compare provided password with the password in the db
+      if (user.password !== password) {
+        return res.status(404).json({ message: "Invalid Password!" });
+      }
+
+      const token = createToken(user._id);
+      res.status(200).json({ token });
+    })
+    .catch((err) => {
+      console.log("Couldn't find user: ", err);
+      res
+        .status(500)
+        .json({ message: "Internal server error! Contact support." });
+    });
+});

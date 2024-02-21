@@ -6,13 +6,51 @@ import {
   TextInput,
   Pressable,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigation } from "@react-navigation/native";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LoginScreen = () => {
-  const { email, setEmail } = useState("");
-  const { password, setPassword } = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const navigation = useNavigation();
+  const SERVER_IP = "10.0.0.90";
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      try {
+        const token = await AsyncStorage.getItem("authToken");
+
+        if (token) {
+          navigation.replace("Home");
+        }
+        //else token not found, show the login screen itself
+      } catch (error) {
+        console.log("Error: ", error);
+      }
+    };
+    checkLoginStatus();
+  }, []);
+  const handleLogin = () => {
+    const user = {
+      email: email,
+      password: password,
+    };
+
+    axios
+      .post(`http://${SERVER_IP}:8000/login`, user)
+      .then((response) => {
+        console.log(response);
+        const token = response.data.token;
+        AsyncStorage.setItem("authToken", token);
+
+        navigation.replace("Home");
+      })
+      .catch((err) => {
+        Alert.alert("Login Error", "Invalid email or password");
+        console.log("Login Error", err);
+      });
+  };
   return (
     <View
       style={{
@@ -82,6 +120,7 @@ const LoginScreen = () => {
           </View>
 
           <Pressable
+            onPress={handleLogin}
             style={{
               width: 200,
               backgroundColor: "#4a55a2",
@@ -104,7 +143,10 @@ const LoginScreen = () => {
             </Text>
           </Pressable>
 
-          <Pressable onPress={() => navigation.navigate("Register")} style={{ marginTop: 15 }}>
+          <Pressable
+            onPress={() => navigation.navigate("Register")}
+            style={{ marginTop: 15 }}
+          >
             <Text style={{ textAlign: "center", color: "gray", fontSize: 16 }}>
               Don't have an account? Sign Up!
             </Text>
