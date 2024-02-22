@@ -61,7 +61,7 @@ const createToken = (userId) => {
     }
 
     //Generate the token with a secret key and expiration time
-    const token = jwt.sign(payload, "L9%bg!qfPxh%v%Ym$g!mN$a!aERC!9DE", {expiresIn: "6h"});
+    const token = jwt.sign(payload, "L9%bg!qfPxh%v%Ym$g!mN$a!aERC!9DE", {expiresIn: "1h"});
 
     return token;
 }
@@ -100,3 +100,10 @@ app.post("/login", (req, res) => {
         .json({ message: "Internal server error! Contact support." });
     });
 });
+
+//endpoint to access all the users except the user who is currently logged in
+app.get("/users/:userId", (req,res) => {
+    const loggedInUserId = req.params.user;
+
+    User.find({_id:{$ne:loggedInUserId}})
+})

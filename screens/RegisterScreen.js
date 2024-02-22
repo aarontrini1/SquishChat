@@ -82,7 +82,7 @@ const RegisterScreen = () => {
             value={name}
             onChangeText={(text) => setName(text)}
             style={{
-              fontSize: email ? 18 : 18,
+              fontSize: 18,
               borderBottomColor: "gray",
               borderBottomWidth: 1,
               marginVertical: 10,
